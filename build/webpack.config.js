@@ -10,7 +10,7 @@ var config = {
     },
     module: {
         loaders: [{
-            test: /\.js?$/,
+            test: /\.js$/,
             loaders: ['babel-loader'],
             exclude: /node_modules/
         }]
