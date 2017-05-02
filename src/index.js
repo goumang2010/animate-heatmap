@@ -81,31 +81,32 @@ function initAdapter(Heatmap) {
                 continue;
             }
             if (x < x0) {
-                dx = minX = x - r;
-                width += r;
+                minX = x - r;
             }
             if (y < y0) {
-                dy = minY = y - r;
-                height += r;
+                minY = y - r;
             }
             if (x > x1) {
                 maxX = x + r;
-                width += r;
             }
             if (y > y1) {
                 maxY = y + r;
-                height += r;
             }
             params.push([x - r, y - r, Math.min(1, Math.max(value * this.option.valueScale ||
                 this.option.minAlpha, this.option.minAlpha))]);
         }
-        ctx.clearRect(dx, dy, width, height);
+        minX < 0 && (minX = 0);
+        minY < 0 && (minY = 0);
+        width = ((maxX > this.width) ? (this.width - minX) : (maxX - minX));
+        height = ((maxY > this.height) ? (this.height - minY) : (maxY - minY));
+        ctx.clearRect(minX, minY, width, height);
         for (let [x, y, alpha] of params) {
             ctx.globalAlpha = alpha;
             ctx.drawImage(brush, x, y);
         }
         // colorize the canvas using alpha value and set with gradient
-        let imageData = ctx.getImageData(dx, dy, width, height);
+
+        let imageData = ctx.getImageData(minX, minY, width, height);
         let pixels = imageData.data;
         let plen = pixels.length / 4;
         while (plen--) {
@@ -118,7 +119,7 @@ function initAdapter(Heatmap) {
             pixels[id] *= this.option.opacity;
             pixels[id] = pixels[id] > 50 ? pixels[id] : 50; // alpha
         }
-        ctx.putImageData(imageData, dx, dy);
+        ctx.putImageData(imageData, minX, minY);
     };
     Heatmap.prototype.setBackground = function(canvas, color) {
         var ctx = canvas.getContext('2d');
