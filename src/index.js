@@ -117,6 +117,12 @@ function initAdapter(Heatmap) {
         }
         ctx.putImageData(imageData, x0, y0);
     };
+    Heatmap.prototype.reset = function({width = this.width, height = this.height} = {}) {   
+        this.canvas.width = width;
+        this.canvas.height = height;
+        this.ctx.clearRect(0, 0, width, height);
+        this.data = null; 
+    }
     Heatmap.prototype.setBackground = function(canvas, color) {
         var ctx = canvas.getContext('2d');
         var imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
