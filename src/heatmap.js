@@ -13,20 +13,7 @@ import { defaultOptions, GRADIENT_LEVELS, BRUSH_SIZE } from './constants';
  * @param {Object} opt options
  */
 function Heatmap(opt) {
-    this.option = opt;
-    this.cache = {};
-    if (opt) {
-        for (var i in defaultOptions) {
-            if (opt[i] !== undefined) {
-                this.option[i] = opt[i];
-            } else {
-                this.option[i] = defaultOptions[i];
-            }
-        }
-    } else {
-        this.option = defaultOptions;
-    }
-    this.r = Math.round(BRUSH_SIZE + this.option.blurSize);
+    this.setOption(opt);
 }
 Heatmap.prototype = {
     /**
@@ -36,39 +23,49 @@ Heatmap.prototype = {
      * @param {number} canvas height
      * @return {Object} rendered canvas
      */
-    getCanvas: function(data, width, height) {
-        this.data = data;
+    init: function({ width, height }) {
         this.width = width;
         this.height = height;
-        var brush = this._getBrush();
-        var gradient = this._getGradient();
-        var r = BRUSH_SIZE + this.option.blurSize;
         var canvas = document.createElement('canvas');
         canvas.width = width;
         canvas.height = height;
         var ctx = canvas.getContext('2d');
-        var len = data.length;
-        for (var i = 0; i < len; ++i) {
-            var p = data[i];
-            var x = p[0];
-            var y = p[1];
-            var value = p[2];
-            if (x < 0 || y < 0 || x > width || y > height) {
+        this.ctx = ctx;
+        this.canvas = canvas;
+    },
+    setOption(opt) {
+        this.option = {...defaultOptions, ...opt};
+        this.r = Math.round(BRUSH_SIZE + this.option.blurSize);
+        this.brush = this._getBrush();
+        this.gradient = this._getGradient();
+    },
+    draw({ ctx = this.ctx, data = this.data, dx = 0, dy = 0, width = this.width, height = this.height } = {}) {
+        var gradient = this.gradient;
+        var r = this.r;
+        let x0 = dx,
+            y0 = dy,
+            x1 = dx + width,
+            y1 = dy + height;
+        let minX = x0 - r;
+        let minY = y0 - r;
+        let maxX = x1 + r;
+        let maxY = y1 + r;
+        // create new canvas
+        let _ctx = this._getTempCtx();
+        for (let [x, y, value] of data) {
+            // filter the point that has no effect
+            if (x < minX || y < minY || x > maxX || y > maxY) {
                 continue;
             }
-            // calculate alpha using value
-            var alpha = Math.min(1, Math.max(value * this.option.valueScale ||
+            _ctx.globalAlpha = Math.min(1, Math.max(value * this.option.valueScale ||
                 this.option.minAlpha, this.option.minAlpha));
-            // draw with the circle brush with alpha
-            ctx.globalAlpha = alpha;
-            ctx.drawImage(brush, x - r, y - r);
+            _ctx.drawImage(this.brush, x - r, y - r);
         }
-        // colorize the canvas using alpha value and set with gradient
-        var imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-        var pixels = imageData.data;
-        var len = pixels.length / 4;
-        while (len--) {
-            var id = len * 4 + 3;
+        let imageData = _ctx.getImageData(x0, y0, width, height);
+        let pixels = imageData.data;
+        let plen = pixels.length / 4;
+        while (plen--) {
+            var id = plen * 4 + 3;
             var alpha = pixels[id] / 256;
             var colorOffset = Math.floor(alpha * (GRADIENT_LEVELS - 1));
             pixels[id - 3] = gradient[colorOffset * 4]; // red
@@ -77,9 +74,13 @@ Heatmap.prototype = {
             pixels[id] *= this.option.opacity;
             pixels[id] = pixels[id] > 50 ? pixels[id] : 50; // alpha
         }
-        ctx.putImageData(imageData, 0, 0);
-        this.ctx = ctx;
-        return canvas;
+        ctx.putImageData(imageData, x0, y0);
+    },
+    reset({ width = this.width, height = this.height } = {}) {
+        this.canvas.width = width;
+        this.canvas.height = height;
+        this.ctx.clearRect(0, 0, width, height);
+        this.data = null;
     },
     /**
      * get canvas of a black circle brush used for canvas to draw later
@@ -94,7 +95,6 @@ Heatmap.prototype = {
             var d = r * 2;
             this._brushCanvas.width = d;
             this._brushCanvas.height = d;
-            Heatmap.DEFAULT_D = d;
             var ctx = this._brushCanvas.getContext('2d');
             // in order to render shadow without the distinct circle,
             // draw the distinct circle in an invisible place,
