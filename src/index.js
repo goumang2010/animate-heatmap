@@ -40,7 +40,9 @@ function initAnimate(Heatmap) {
         },
         update(newdata) {
             if (!this.data) {
-                this.draw({ data: newdata });
+                // only render visible points
+                this.draw({ data: newdata.filter(x => x[3]) });
+                newdata.forEach(x => (x[5] = !x[3]));
                 this.data = newdata;
                 return;
             }
