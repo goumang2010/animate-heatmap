@@ -3,7 +3,8 @@ import { GRADIENT_LEVELS } from './constants';
 
 function initAnimate(Heatmap) {
     Object.assign(Heatmap.prototype, {
-        buildAnimation({ interval = 50, processor = x => x, converter = x => x, initData } = {}) {
+        buildAnimation({ fps = 20, processor = x => x, converter = x => x, initData } = {}) {
+            let interval = 1000 / fps;
             let requestId, then, data;
             const freshCanvas = () => {
                 requestId = window.requestAnimationFrame(freshCanvas.bind(this));
