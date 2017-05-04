@@ -30,6 +30,7 @@ export const defaultOptions = {
         color: 'red'
     }],
     minAlpha: 0.05,
+    bgAlpha: 80,
     valueScale: 1,
     opacity: 1
 };

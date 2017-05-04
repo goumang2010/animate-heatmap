@@ -4,7 +4,8 @@ const defaultOption = {
     hoverable: false,
     minAlpha: 0.2,
     valueScale: 1,
-    opacity: 1
+    opacity: 1,
+    bgAlpha: 100,
 };
 export default function({ option = {}, types, initData } = {}) {
     option = { ...defaultOption, ...option };

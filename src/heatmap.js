@@ -34,14 +34,15 @@ Heatmap.prototype = {
         this.canvas = canvas;
     },
     setOption(opt) {
-        this.option = {...defaultOptions, ...opt};
+        this.option = { ...defaultOptions, ...opt };
         this.r = Math.round(BRUSH_SIZE + this.option.blurSize);
         this.brush = this._getBrush();
         this.gradient = this._getGradient();
     },
     draw({ ctx = this.ctx, data = this.data, dx = 0, dy = 0, width = this.width, height = this.height } = {}) {
-        var gradient = this.gradient;
-        var r = this.r;
+        const gradient = this.gradient;
+        const r = this.r;
+        const { opacity, minAlpha, bgAlpha, valueScale } = this.option;
         let x0 = dx,
             y0 = dy,
             x1 = dx + width,
@@ -57,8 +58,8 @@ Heatmap.prototype = {
             if (x < minX || y < minY || x > maxX || y > maxY) {
                 continue;
             }
-            _ctx.globalAlpha = Math.min(1, Math.max(value * this.option.valueScale ||
-                this.option.minAlpha, this.option.minAlpha));
+            _ctx.globalAlpha = Math.min(1, Math.max(value * valueScale ||
+                minAlpha, minAlpha));
             _ctx.drawImage(this.brush, x - r, y - r);
         }
         let imageData = _ctx.getImageData(x0, y0, width, height);
@@ -71,8 +72,8 @@ Heatmap.prototype = {
             pixels[id - 3] = gradient[colorOffset * 4]; // red
             pixels[id - 2] = gradient[colorOffset * 4 + 1]; // green
             pixels[id - 1] = gradient[colorOffset * 4 + 2]; // blue
-            pixels[id] *= this.option.opacity;
-            pixels[id] = pixels[id] > 50 ? pixels[id] : 50; // alpha
+            pixels[id] *= opacity;
+            pixels[id] = pixels[id] > bgAlpha ? pixels[id] : bgAlpha; // alpha
         }
         ctx.putImageData(imageData, x0, y0);
     },
