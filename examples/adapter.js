@@ -126,7 +126,7 @@ class Adapter {
             $heatdiv.id = 'heatdiv';
             const docheight = this.$body.offsetHeight;
             const docwidth = this.$body.offsetWidth;
-            $heatdiv.style.cssText = `overflow:hidden;z-index:1100;position:absolute;height:${docheight}px;width:${docwidth}px;top:0;left:0;pointer-events:none;`;
+            $heatdiv.style.cssText = `overflow:hidden;z-index:99999;position:absolute;height:${docheight}px;width:${docwidth}px;top:0;left:0;pointer-events:none;`;
             this.$body.appendChild($heatdiv);
             this.$heatdiv = $heatdiv;
         }
@@ -155,7 +155,7 @@ class Adapter {
             $tip = document.createElement('p');
             $tip.style.textAlign = 'left';
             $popover = document.createElement('div');
-            $popover.style.cssText = `z-index:4000;overflow:hidden;display:none;position:absolute;border:0px solid rgb(51,51,51);transition:left 0.4s,top 0.4s;border-radius:4px;color:rgb(255,255,255);padding:5px;background-color:rgba(0,0,0,0.7);transition: all 0.5s`;
+            $popover.style.cssText = `z-index:999999;overflow:hidden;display:none;position:absolute;border:0px solid rgb(51,51,51);transition:left 0.4s,top 0.4s;border-radius:4px;color:rgb(255,255,255);padding:5px;background-color:rgba(0,0,0,0.7);transition: all 0.5s`;
             $popover.appendChild($tip);
             this.$popover = $popover;
             this.$heatdiv.appendChild($popover);
