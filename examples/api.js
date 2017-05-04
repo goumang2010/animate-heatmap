@@ -7,6 +7,7 @@ export default {
             }
             var data;
             if (res && (data = res.data) && (data = data.result) && data.length) {
+                // data = data.filter(x => x.pointName.includes('-a0'));
                 return data;
             } else {
                 return Promise.reject('No heat info!');
