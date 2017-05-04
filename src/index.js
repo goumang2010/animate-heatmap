@@ -56,8 +56,6 @@ function initAnimate(Heatmap) {
                 let x1 = newdata[i];
                 // if point is assigned to be keep, do nothing
                 if (x1[4]) {
-                    // needKeep.push(x0);
-                    // newdata[i] = x0;
                     continue;
                 }
                 // point that visible
@@ -69,13 +67,12 @@ function initAnimate(Heatmap) {
                         needErease.push(x0);
                         needDraw.push(x1);
                     }
-                } else if (x0[3]){
+                } else if (x0[3]) {
                     // x0 has been deleted
                     needErease.push(x0);
                 } else {
                     // always invisible, just leave it alone
                     needKeep.push(x0);
-                    newdata[i] = x0;
                 }
             }
             let all = [...needErease, ...needDraw];
