@@ -55,7 +55,7 @@ class Adapter {
         const winHeight = this.$win.innerHeight;
         return data.map((x, i) => {
             let $el = x.$el || (x.$el = $doc.querySelector(x.selector));
-            delete x.visable;
+            delete x.visible;
             delete x.slient;
             if (!$el) {
                 return x;
@@ -67,15 +67,15 @@ class Adapter {
             let _centerY = rect.top + _height / 2;
             // refer to http://stackoverflow.com/questions/123999/how-to-tell-if-a-dom-element-is-visible-in-the-current-viewport
             // if the point is scrolled out, then keep it.
-            let visable = _width && _height && $el.contains(efp(_centerX, _centerY));
-            let slient = _centerY < 0 || _centerY > winHeight && !visable;
+            let visible = _width && _height && $el.contains(efp(_centerX, _centerY));
+            let slient = _centerY < 0 || _centerY > winHeight && !visible;
             if(slient) {
                 return {
                     ...x,
                     slient
                 }
             }
-            if (visable) {
+            if (visible) {
                 _centerX = Math.round(bodyScrollLeft + _centerX);
                 _centerY = Math.round(bodyScrollTop + _centerY);
                 return {
@@ -84,7 +84,7 @@ class Adapter {
                     _height,
                     _centerX,
                     _centerY,
-                    visable
+                    visible
                 };
             }
             return x;
@@ -92,7 +92,7 @@ class Adapter {
     }
     convert(data) {
         this.parsedData = data;
-        return data.map(x => [x._centerX, x._centerY, x[this.field], x.visable, x.slient]);
+        return data.map(x => [x._centerX, x._centerY, x[this.field], x.visible, x.slient]);
     }
     preProcess(data, maxVal = 1) {
         if (Array.isArray(data)) {
