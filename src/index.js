@@ -116,21 +116,24 @@ function initAnimate(Heatmap) {
             // find the minimal section to be cleared
             let xseries = data.map(x => x[0]).filter(Boolean);
             let yseries = data.map(x => x[1]).filter(Boolean);
-            let r = this.r;
-            let maxX = Math.ceil(Math.max(...xseries) + r);
-            let minX = Math.floor(Math.min(...xseries) - r);
-            let maxY = Math.ceil(Math.max(...yseries) + r);
-            let minY = Math.floor(Math.min(...yseries) - r);
-            let dx = minX > 0 ? minX : 0;
-            let dy = minY > 0 ? minY : 0;
-            let width = maxX - minX;
-            let height = maxY - minY;
-            return {
-                dx,
-                dy,
-                width,
-                height
+            if (xseries.length && yseries.length) {
+                let r = this.r;
+                let maxX = Math.ceil(Math.max(...xseries) + r);
+                let minX = Math.floor(Math.min(...xseries) - r);
+                let maxY = Math.ceil(Math.max(...yseries) + r);
+                let minY = Math.floor(Math.min(...yseries) - r);
+                let dx = minX > 0 ? minX : 0;
+                let dy = minY > 0 ? minY : 0;
+                let width = maxX - minX;
+                let height = maxY - minY;
+                return {
+                    dx,
+                    dy,
+                    width,
+                    height
+                };
             }
+            return {};
         }
     })
 }
