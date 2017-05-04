@@ -56,7 +56,7 @@ class Adapter {
         return data.map((x, i) => {
             let $el = x.$el || (x.$el = $doc.querySelector(x.selector));
             delete x.visable;
-            delete x.keep;
+            delete x.slient;
             if (!$el) {
                 return x;
             }
@@ -67,13 +67,12 @@ class Adapter {
             let _centerY = rect.top + _height / 2;
             // refer to http://stackoverflow.com/questions/123999/how-to-tell-if-a-dom-element-is-visible-in-the-current-viewport
             // if the point is scrolled out, then keep it.
-            let visable = _height && _height && $el.contains(efp(_centerX, _centerY));
-            let keep = _centerY < 0 || _centerY > winHeight && !visable;
-            // let keep = false;
-            if(keep) {
+            let visable = _width && _height && $el.contains(efp(_centerX, _centerY));
+            let slient = _centerY < 0 || _centerY > winHeight && !visable;
+            if(slient) {
                 return {
                     ...x,
-                    keep: true
+                    slient
                 }
             }
             if (visable) {
@@ -93,7 +92,7 @@ class Adapter {
     }
     convert(data) {
         this.parsedData = data;
-        return data.map(x => [x._centerX, x._centerY, x[this.field], x.visable, x.keep]);
+        return data.map(x => [x._centerX, x._centerY, x[this.field], x.visable, x.slient]);
     }
     preProcess(data, maxVal = 1) {
         if (Array.isArray(data)) {
