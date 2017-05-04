@@ -1,5 +1,4 @@
 import Heatmap from './heatmap';
-import { GRADIENT_LEVELS } from './constants';
 
 function initAnimate(Heatmap) {
     Object.assign(Heatmap.prototype, {
