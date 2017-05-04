@@ -3,31 +3,38 @@ import { GRADIENT_LEVELS } from './constants';
 
 function initAnimate(Heatmap) {
     Object.assign(Heatmap.prototype, {
-        buildAnimation({ fps = 20, processor = x => x, converter = x => x, initData } = {}) {
-            let interval = 1000 / fps;
-            let requestId, then, data;
+        buildAnimation(params) {
+            let _requestId, _interval, _processor, _converter, _data, then;
             const freshCanvas = () => {
-                requestId = window.requestAnimationFrame(freshCanvas.bind(this));
+                _requestId = window.requestAnimationFrame(freshCanvas.bind(this));
                 let now = Date.now();
                 let elapsed = now - then;
-                if (elapsed > interval) {
-                    data = processor(data);
-                    this.update(converter(data));
+                if (elapsed > _interval) {
+                    _data = _processor(_data);
+                    this.update(_converter(_data));
                     then = now;
                 }
             }
+            const setParams = ({ fps, processor, converter, data }) => {
+                fps && (_interval = 1000 / fps) || _interval || (_interval = 50);
+                processor && (_processor = processor) || _processor || (_processor = x => x);
+                converter && (_converter = converter) || _converter || (_converter = x => x);
+                data && (_data = data);
+            }
+            setParams(params);
             return {
-                start: (_data = initData) => {
-                    data = _data;
+                reset: setParams,
+                start: (data) => {
+                    data && (_data = data);
                     then = Date.now();
-                    if (!requestId) {
+                    if (!_requestId) {
                         freshCanvas();
                     }
                 },
                 stop: () => {
-                    if (requestId) {
-                        window.cancelAnimationFrame(requestId);
-                        requestId = null;
+                    if (_requestId) {
+                        window.cancelAnimationFrame(_requestId);
+                        _requestId = null;
                     }
                 }
             }

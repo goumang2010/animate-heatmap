@@ -14,7 +14,7 @@ export default function({ option = {}, types, initData } = {}) {
     const controller = heatmapInstance.buildAnimation({
         processor: adapter.process.bind(adapter),
         converter: adapter.convert.bind(adapter),
-        initData: adapter.preProcess(initData)
+        data: adapter.preProcess(initData)
     });
     adapter.append(heatmapInstance.canvas);
     adapter.showTip();
