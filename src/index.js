@@ -48,36 +48,40 @@ function initAnimate(Heatmap) {
             if (!Array.isArray(newdata) || ((len = newdata.length) !== this.data.length)) {
                 throw new Error('data array of same length required!');
             }
-            let needkeep = [];
-            let needupdate = [];
-            // to record old position
-            let needupdatePrev = [];
+            let needKeep = [];
+            let needDraw = [];
+            let needErease = [];
             for (let i = 0; i < len; i++) {
                 let x0 = this.data[i];
                 let x1 = newdata[i];
-                if (this._checkPosition(x0)) {
-                    // assign to keep
-                    if (x1[3]) {
-                        needkeep.push(x0);
-                        newdata[i] = x0;
-                    } else if (x1[0] && x1[1] && (x0[0] === x1[0]) && (x0[1] === x1[1])) {
-                        needkeep.push(x0);
-                    } else if (this._checkPosition(x1)) {
-                        needupdatePrev.push(x0);
-                        needupdate.push(x1);
-                        // if x1 has been deleted
+                // if point is assigned to be keep, do nothing
+                if (x1[4]) {
+                    // needKeep.push(x0);
+                    // newdata[i] = x0;
+                    continue;
+                }
+                // point that visible
+                if (x1[3]) {
+                    // whether x0 is visible, just update it
+                    if ((x0[0] === x1[0]) && (x0[1] === x1[1])) {
+                        needKeep.push(x1);
                     } else {
-                        needupdatePrev.push(x0);
+                        needErease.push(x0);
+                        needDraw.push(x1);
                     }
-                    // if x1 is new
-                } else if (this._checkPosition(x1)) {
-                    needupdate.push(x1);
+                } else if (x0[3]){
+                    // x0 has been deleted
+                    needErease.push(x0);
+                } else {
+                    // always invisible, just leave it alone
+                    needKeep.push(x0);
+                    newdata[i] = x0;
                 }
             }
-            let all = [...needupdatePrev, ...needupdate];
+            let all = [...needErease, ...needDraw];
             if (all.length > 0) {
                 this.data = newdata;
-                return this.draw({ data: [...needupdate, ...needkeep], ...this._getMinReDrawSection(all) });
+                return this.draw({ data: [...needDraw, ...needKeep].filter(x => this._checkPosition(x)), ...this._getMinReDrawSection(all) });
             }
         },
         _checkPosition(item) {
@@ -97,8 +101,8 @@ function initAnimate(Heatmap) {
         },
         _getMinReDrawSection(data) {
             // find the minimal section to be cleared
-            let xseries = data.map(x => x[0]);
-            let yseries = data.map(x => x[1]);
+            let xseries = data.map(x => x[0]).filter(Boolean);
+            let yseries = data.map(x => x[1]).filter(Boolean);
             let r = this.r;
             let maxX = Math.ceil(Math.max(...xseries) + r);
             let minX = Math.floor(Math.min(...xseries) - r);

@@ -21,13 +21,6 @@ export default function({ option = {}, types, initData } = {}) {
     adapter.showTip();
     return controller;
 }
-// http://youmightnotneedjquery.com/
-function getOffset(el) {
-    let rect = el.getBoundingClientRect();
-    let _top = rect.top + document.body.scrollTop;
-    let _left = rect.left + document.body.scrollLeft;
-    return { _top, _left };
-}
 class Adapter {
     constructor(types) {
         this.setTypes(types);
@@ -42,7 +35,8 @@ class Adapter {
         this.field = type.field || (type.field = '_' + (type.name || 'noname'));
     }
     getIframeSize() {
-        this.$doc = document.querySelector('iframe').contentWindow.document;
+        this.$win = document.querySelector('iframe').contentWindow;
+        this.$doc = this.$win.document;
         let $body = this.$body = this.$doc.body;
         return {
             width: $body.offsetWidth,
@@ -53,46 +47,58 @@ class Adapter {
         this.rawData = data;
     }
     process(data) {
-        const $iframe = this.$doc;
-        const efp = $iframe.elementFromPoint.bind($iframe);
+        const $doc = this.$doc;
+        const efp = $doc.elementFromPoint.bind($doc);
+        const bodyHeight = $doc.body.offsetHeight;
+        const bodyScrollTop = $doc.body.scrollTop;
+        const bodyScrollLeft = $doc.body.scrollLeft;
+        const winHeight = this.$win.innerHeight;
         return data.map((x, i) => {
-            let $el = x.$el || $iframe.querySelector(x.selector);
+            let $el = x.$el || (x.$el = $doc.querySelector(x.selector));
+            delete x._centerX;
+            delete x._centerY;
+            delete x.visable;
+            delete x.keep;
             if (!$el) {
-                return {};
-            }
-            let iframeScrollTop = $iframe.body.scrollTop;
-            let rect = $el.getBoundingClientRect();
-            let _top = rect.top + $iframe.body.scrollTop;
-            let _left = rect.left + $iframe.body.scrollLeft;
-            let _width = $el.offsetWidth;
-            let _height = $el.offsetHeight;
-            let keep = (rect.top < 0 || rect.bottom > $iframe.body.offsetHeight);
-            // refer to http://stackoverflow.com/questions/123999/how-to-tell-if-a-dom-element-is-visible-in-the-current-viewport
-            let isVisable = _width && _height && $el.getClientRects().length && ($el.contains(efp(rect.left, rect.top)) || $el.contains(efp(rect.right, rect.top)) ||
-                $el.contains(efp(rect.right, rect.bottom)) ||
-                $el.contains(efp(rect.left, rect.bottom)));
-            if (isVisable && !keep) {
-                let _centerX = Math.round(_left + _width / 2);
-                let _centerY = Math.round(_top + _height / 2);
-                return ({
+                return {
                     ...x,
-                    $el,
+                    visable: false
+                };
+            }
+            let rect = $el.getBoundingClientRect();
+            let _width = rect.width;
+            let _height = rect.height;
+            let _centerX = rect.left + _width / 2;
+            let _centerY = rect.top + _height / 2;
+            // refer to http://stackoverflow.com/questions/123999/how-to-tell-if-a-dom-element-is-visible-in-the-current-viewport
+            // if the point is scrolled out, then keep it.
+            let visable = _height && _height && $el.contains(efp(_centerX, _centerY));
+            let keep = _centerY < 0 || _centerY > winHeight && !visable;
+            // let keep = false;
+            if(keep) {
+                return {
+                    ...x,
+                    keep: true
+                }
+            }
+            if (visable) {
+                _centerX = Math.round(bodyScrollLeft + _centerX);
+                _centerY = Math.round(bodyScrollTop + _centerY);
+                return {
+                    ...x,
                     _width,
                     _height,
                     _centerX,
-                    _centerY
-                });
-            } else {
-                return ({
-                    $el,
-                    keep
-                });
+                    _centerY,
+                    visable
+                };
             }
+            return x;
         });
     }
     convert(data) {
         this.parsedData = data;
-        return data.map(x => [x._centerX, x._centerY, x[this.field], x.keep]);
+        return data.map(x => [x._centerX, x._centerY, x[this.field], x.visable, x.keep]);
     }
     preProcess(data, maxVal = 1) {
         if (Array.isArray(data)) {
