@@ -55,28 +55,38 @@ function initAnimate(Heatmap) {
             // remove these points
             let needErease = [];
             for (let i = 0; i < len; i++) {
+                // item[0] -> X; item[1] -> Y; item[3] -> visible in view; item[4] -> silent point(out of view); item[5] -> if has been deleted;
                 let x0 = this.data[i];
                 let x1 = newdata[i];
-                // if point is assigned to be keep, do nothing
+                // item[5] -> if deleted, then true, else false. Inherit last state.
+                x1[5] = x0[5];
+                // skip slient point
                 if (x1[4]) {
                     continue;
                 }
                 // point that visible
                 if (x1[3]) {
-                    // whether x0 is visible, just update it
-                    if ((x0[0] === x1[0]) && (x0[1] === x1[1])) {
-                        // position is not changed, draw it if it reappear, or just keep it
-                        (x0[3] || x0[4]) ? needKeep.push(x1) : needDraw.push(x1);
+                    x1[5] = false;
+                    if (x0[5]) {
+                        // x0 has been deleted, then create it
+                        needDraw.push(x1);
+                    } else if ((x0[0] === x1[0]) && (x0[1] === x1[1])) {
+                        // position is the same, keep it
+                        needKeep.push(x1);
                     } else {
+                        // point has been moved
                         needErease.push(x0);
                         needDraw.push(x1);
                     }
-                } else if (x0[3]) {
-                    // x0 has been deleted
-                    needErease.push(x0);
                 } else {
-                    // always invisible, just leave it alone
-                    // because it must have been deleted or never created.
+                    // point is not visible now, we need remove it or keep it.
+                    if (x0[5]) {
+                        // already deleted, just leave it alone
+                    } else {
+                        // ever exist, now inbisible
+                        needErease.push(x0);
+                        x1[5] = true;
+                    }
                 }
             }
             let all = [...needErease, ...needDraw];
