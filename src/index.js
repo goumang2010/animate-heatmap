@@ -48,8 +48,11 @@ function initAnimate(Heatmap) {
             if (!Array.isArray(newdata) || ((len = newdata.length) !== this.data.length)) {
                 throw new Error('data array of same length required!');
             }
+            // contains points those are visible and might effect redrawing.
             let needKeep = [];
+            // draw these points
             let needDraw = [];
+            // remove these points
             let needErease = [];
             for (let i = 0; i < len; i++) {
                 let x0 = this.data[i];
@@ -62,7 +65,8 @@ function initAnimate(Heatmap) {
                 if (x1[3]) {
                     // whether x0 is visible, just update it
                     if ((x0[0] === x1[0]) && (x0[1] === x1[1])) {
-                        needKeep.push(x1);
+                        // position is not changed, draw it if it reappear, or just keep it
+                        (x0[3] || x0[4]) ? needKeep.push(x1) : needDraw.push(x1);
                     } else {
                         needErease.push(x0);
                         needDraw.push(x1);
@@ -72,7 +76,7 @@ function initAnimate(Heatmap) {
                     needErease.push(x0);
                 } else {
                     // always invisible, just leave it alone
-                    needKeep.push(x0);
+                    // because it must have been deleted or never created.
                 }
             }
             let all = [...needErease, ...needDraw];

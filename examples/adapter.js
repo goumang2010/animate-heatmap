@@ -55,15 +55,10 @@ class Adapter {
         const winHeight = this.$win.innerHeight;
         return data.map((x, i) => {
             let $el = x.$el || (x.$el = $doc.querySelector(x.selector));
-            delete x._centerX;
-            delete x._centerY;
             delete x.visable;
             delete x.keep;
             if (!$el) {
-                return {
-                    ...x,
-                    visable: false
-                };
+                return x;
             }
             let rect = $el.getBoundingClientRect();
             let _width = rect.width;
