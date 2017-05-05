@@ -1,5 +1,5 @@
 import Heatmap from './heatmap';
-
+import * as utils from '../src/utils';
 function initAnimate(Heatmap) {
     Object.assign(Heatmap.prototype, {
         buildAnimation(params) {
@@ -40,6 +40,7 @@ function initAnimate(Heatmap) {
         },
         update(newdata) {
             if (!this.data) {
+                this.variance = 4 * this.r * this.r; 
                 // only render visible points
                 this.draw({ data: newdata.filter(x => x[3]) });
                 newdata.forEach(x => (x[5] = !x[3]));
@@ -103,7 +104,14 @@ function initAnimate(Heatmap) {
             let all = [...needErease, ...needDraw];
             if (all.length > 0) {
                 this.data = newdata;
-                return this.draw({ data: [...needDraw, ...needKeep].filter(x => this._checkPosition(x)), ...this._getMinReDrawSection(all) });
+                needDraw.push(...needKeep)
+                needDraw = needDraw.filter(x => this._checkPosition(x));
+                // group the points
+                let results = utils.groupPoints(all);
+                console.log(results.length);
+                for(let res of results) {
+                    this.draw({ data: needDraw, ...this._getMinReDrawSection(res) });
+                }
             }
         },
         _checkPosition(item) {
