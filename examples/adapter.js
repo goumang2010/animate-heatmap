@@ -23,6 +23,9 @@ export default function({ option = {}, types, initData } = {}) {
 }
 class Adapter {
     constructor(types) {
+        this.$win = document.querySelector('iframe').contentWindow;
+        this.$doc = this.$win.document;
+        this.$body = this.$doc.body;
         this.setTypes(types);
         this.setCurrentType();
     }
@@ -35,12 +38,9 @@ class Adapter {
         this.field = type.field || (type.field = '_' + (type.name || 'noname'));
     }
     getIframeSize() {
-        this.$win = document.querySelector('iframe').contentWindow;
-        this.$doc = this.$win.document;
-        let $body = this.$body = this.$doc.body;
         return {
-            width: $body.offsetWidth,
-            height: $body.offsetHeight
+            width: this.$body.offsetWidth,
+            height: this.$body.offsetHeight
         }
     }
     updateData(data) {
