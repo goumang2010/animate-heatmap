@@ -11,7 +11,14 @@ export default function({ option = {}, types, initData } = {}) {
     option = { ...defaultOption, ...option };
     const heatmapInstance = new Heatmap(option);
     const adapter = new Adapter(types);
-    heatmapInstance.init(adapter.getIframeSize());
+    let size = adapter.getIframeSize();
+    adapter.bindEvent({id: 'scroll', type: 'scroll', handler: function() {
+        if (this.body.scrollTop > size.height - this.defaultView.innerHeight) {
+            heatmapInstance.resetSize((size = adapter.getIframeSize()));
+            adapter.resetSize(size);
+        }
+    }})
+    heatmapInstance.init(size);
     const controller = heatmapInstance.buildAnimation({
         processor: adapter.process.bind(adapter),
         converter: adapter.convert.bind(adapter),
@@ -42,6 +49,10 @@ class Adapter {
             width: this.$body.offsetWidth,
             height: this.$body.offsetHeight
         }
+    }
+    resetSize({width, height}) {
+        this.$heatdiv.style.width = width + 'px';
+        this.$heatdiv.style.height = height + 'px';
     }
     bindEvent({ id, type, handler }) {
         this.$doc.addEventListener(type, handler);
