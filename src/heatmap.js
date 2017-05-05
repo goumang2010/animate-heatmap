@@ -105,11 +105,24 @@ Heatmap.prototype = {
         }
         ctx.putImageData(imageData, x0, y0);
     },
-    reset({ width = this.width, height = this.height } = {}) {
+    resetSize({ width = this.width, height = this.height } = {}) {
         this.canvas.width = width;
         this.canvas.height = height;
-        this.ctx.clearRect(0, 0, width, height);
-        this.data = null;
+        this.width = width;
+        this.height = height;
+        delete this.__ctx;
+        this.draw();
+    },
+    _getTempCtx() {
+        if (!this.__ctx) {
+            let _canvas = document.createElement('canvas');
+            _canvas.width = this.width;
+            _canvas.height = this.height;
+            this.__ctx = _canvas.getContext('2d');
+        } else {
+            this.__ctx.clearRect(0, 0, this.width, this.height);
+        }
+        return this.__ctx;
     },
     /**
      * get canvas of a black circle brush used for canvas to draw later

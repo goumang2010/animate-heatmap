@@ -101,17 +101,6 @@ function initAnimate(Heatmap) {
             let x, y;
             return (item && (x = item[0]) >= 0 && x < this.width && (y = item[1]) >= 0 && y < this.height)
         },
-        _getTempCtx() {
-            if (!this.__ctx) {
-                let _canvas = document.createElement('canvas');
-                _canvas.width = this.width;
-                _canvas.height = this.height;
-                this.__ctx = _canvas.getContext('2d');
-            } else {
-                this.__ctx.clearRect(0, 0, this.width, this.height);
-            }
-            return this.__ctx;
-        },
         _getMinReDrawSection(data) {
             // find the minimal section to be cleared
             let xseries = data.map(x => x[0]).filter(Boolean);
