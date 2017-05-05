@@ -104,7 +104,9 @@ function initAnimate(Heatmap) {
             }
             let all = [...needErease, ...needDraw];
             if (all.length > 0) {
-                // console.time('update');
+                if (process.env.NODE_ENV !== 'production') {
+                    console.time('update');
+                }
                 this.data = newdata;
                 needDraw.push(...needKeep)
                 needDraw = needDraw.filter(x => this._checkPosition(x));
@@ -113,7 +115,9 @@ function initAnimate(Heatmap) {
                 for (let res of results) {
                     this.drawArea({ data: needDraw, ...getPointsRect(res, this.r) });
                 }
-                // console.timeEnd('update');
+                if (process.env.NODE_ENV !== 'production') {
+                    console.timeEnd('update');
+                }
             }
         },
         _checkPosition(item) {

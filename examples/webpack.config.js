@@ -62,7 +62,9 @@ let config = {
         }),
         new webpack.NoEmitOnErrorsPlugin(),
         new webpack.DefinePlugin({
-            'process.env.DEV_TARGET': '"${process.env.DEV_TARGET}"'
+            'process.env': {
+                NODE_ENV: '"development"',
+            }
         }),
         new webpack.NamedModulesPlugin()
     ],

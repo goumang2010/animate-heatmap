@@ -17,7 +17,13 @@ var config = {
     },
     target: 'web',
     devtool: 'source-map',
-    plugins: [],
+    plugins: [
+        new webpack.DefinePlugin({
+            'process.env': {
+                NODE_ENV: '"production"',
+            }
+        }),
+    ],
     resolve: {
         extensions: ['.js'],
         alias: {
