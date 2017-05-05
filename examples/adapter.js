@@ -43,6 +43,51 @@ class Adapter {
             height: this.$body.offsetHeight
         }
     }
+    bindEvent({ id, type, handler }) {
+        this.$doc.addEventListener(type, handler);
+        this.events = this.events || [];
+        id = id || Object.keys(this.events).length;
+        this.events.push({ id, type, handler });
+    }
+    unbindEvent(id, noerr = false) {
+        if (!this.events) {
+            if (noerr) {
+                return;
+            } else {
+                throw new Error('there are no events bound!');
+            }
+        }
+        let i, event;
+        if (typeof id === 'string' || typeof id === 'number') {
+            id = id.toString();
+            i = this.events.findIndex(x => x.id === id);
+            if (i < 0) {
+                if (noerr) {
+                    return;
+                } else {
+                    throw new Error('id is not found! id:' + id.toString());
+                }
+            }
+        } else if (typeof id === 'function') {
+            i = this.events.findIndex(x => x.handler === handler);
+            if (i < 0) {
+                if (noerr) {
+                    return;
+                } else {
+                    throw new Error('handler is not found! id:' + id.toString());
+                }
+            }
+        } else {
+            if (noerr) {
+                return;
+            } else {
+                throw new Error('string or function is required by unbindEvent!');
+            }
+        }
+        event = this.events[i];
+        this.$doc.removeEventListener(event.type, event.handler);
+        this.events.splice(i, 1);
+    }
     updateData(data) {
         this.rawData = data;
     }
@@ -69,7 +114,7 @@ class Adapter {
             // if the point is scrolled out, then keep it.
             let visible = _width && _height && $el.contains(efp(_centerX, _centerY));
             let slient = _centerY < 0 || _centerY > winHeight && !visible;
-            if(slient) {
+            if (slient) {
                 return {
                     ...x,
                     slient
@@ -142,7 +187,7 @@ class Adapter {
             throw new Error('Iframe element and heatdiv must be assigned in advance, run generateCanvas first!');
         }
         // bind event
-        this.tipEvent && this.$doc.removeEventListener('mousemove', this.tipEvent);
+        this.unbindEvent('tip', true);
         let $tip, $popover;
         // inject popover
         if (!($popover = this.$popover)) {
@@ -174,7 +219,7 @@ class Adapter {
             $popover.style.display = 'block';
             wait = false;
         }
-        this.tipEvent = (e) => {
+        const tipEvent = (e) => {
             if (!this.parsedData) {
                 return;
             }
@@ -202,6 +247,6 @@ class Adapter {
                 $popover.style.display = 'none';
             }
         }
-        this.$doc.addEventListener('mousemove', this.tipEvent.bind(this));
+        this.bindEvent({ id: 'tip', type: 'mousemove', handler: tipEvent.bind(this) })
     }
 }
