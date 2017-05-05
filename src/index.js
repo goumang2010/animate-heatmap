@@ -1,5 +1,6 @@
 import Heatmap from './heatmap';
-import * as utils from '../src/utils';
+import { groupPoints, getPointsRect } from '../src/utils';
+
 function initAnimate(Heatmap) {
     Object.assign(Heatmap.prototype, {
         buildAnimation(params) {
@@ -40,9 +41,9 @@ function initAnimate(Heatmap) {
         },
         update(newdata) {
             if (!this.data) {
-                this.variance = 4 * this.r * this.r; 
+                this.variance = 4 * this.r * this.r;
                 // only render visible points
-                this.draw({ data: newdata.filter(x => x[3]) });
+                this.drawArea({ data: newdata.filter(x => x[3]) });
                 newdata.forEach(x => (x[5] = !x[3]));
                 this.data = newdata;
                 return;
@@ -67,7 +68,7 @@ function initAnimate(Heatmap) {
                 x1[5] = x0[5];
                 // skip slient point
                 if (x1[4]) {
-                    if(!x0[5]) {
+                    if (!x0[5]) {
                         silentExisted.push(x1);
                     }
                     continue;
@@ -103,43 +104,21 @@ function initAnimate(Heatmap) {
             }
             let all = [...needErease, ...needDraw];
             if (all.length > 0) {
+                // console.time('update');
                 this.data = newdata;
                 needDraw.push(...needKeep)
                 needDraw = needDraw.filter(x => this._checkPosition(x));
                 // group the points
-                let results = utils.groupPoints(all);
-                console.log(results.length);
-                for(let res of results) {
-                    this.draw({ data: needDraw, ...this._getMinReDrawSection(res) });
+                let results = groupPoints(all);
+                for (let res of results) {
+                    this.drawArea({ data: needDraw, ...getPointsRect(res, this.r) });
                 }
+                // console.timeEnd('update');
             }
         },
         _checkPosition(item) {
             let x, y;
             return (item && (x = item[0]) >= 0 && x < this.width && (y = item[1]) >= 0 && y < this.height)
-        },
-        _getMinReDrawSection(data) {
-            // find the minimal section to be cleared
-            let xseries = data.map(x => x[0]).filter(Boolean);
-            let yseries = data.map(x => x[1]).filter(Boolean);
-            if (xseries.length && yseries.length) {
-                let r = this.r;
-                let maxX = Math.ceil(Math.max(...xseries) + r);
-                let minX = Math.floor(Math.min(...xseries) - r);
-                let maxY = Math.ceil(Math.max(...yseries) + r);
-                let minY = Math.floor(Math.min(...yseries) - r);
-                let dx = minX > 0 ? minX : 0;
-                let dy = minY > 0 ? minY : 0;
-                let width = maxX - minX;
-                let height = maxY - minY;
-                return {
-                    dx,
-                    dy,
-                    width,
-                    height
-                };
-            }
-            return {};
         }
     })
 }

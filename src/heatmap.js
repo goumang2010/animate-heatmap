@@ -34,6 +34,7 @@
  * @module
  */
 import { defaultOptions, GRADIENT_LEVELS, BRUSH_SIZE } from './constants';
+import { filterPoints } from './utils';
 /**
  * Heatmap Chart
  *
@@ -67,30 +68,9 @@ Heatmap.prototype = {
         this.brush = this._getBrush();
         this.gradient = this._getGradient();
     },
-    draw({ ctx = this.ctx, data = this.data, dx = 0, dy = 0, width = this.width, height = this.height } = {}) {
+    color(imageData) {
         const gradient = this.gradient;
-        const r = this.r;
-        const { opacity, minAlpha, bgAlpha, valueScale } = this.option;
-        let x0 = dx,
-            y0 = dy,
-            x1 = dx + width,
-            y1 = dy + height;
-        let minX = x0 - r;
-        let minY = y0 - r;
-        let maxX = x1 + r;
-        let maxY = y1 + r;
-        // create new canvas
-        let _ctx = this._getTempCtx();
-        for (let [x, y, value] of data) {
-            // filter the point that has no effect
-            if (x < minX || y < minY || x > maxX || y > maxY) {
-                continue;
-            }
-            _ctx.globalAlpha = Math.min(1, Math.max(value * valueScale ||
-                minAlpha, minAlpha));
-            _ctx.drawImage(this.brush, x - r, y - r);
-        }
-        let imageData = _ctx.getImageData(x0, y0, width, height);
+        const { opacity, bgAlpha } = this.option;
         let pixels = imageData.data;
         let plen = pixels.length / 4;
         while (plen--) {
@@ -103,7 +83,28 @@ Heatmap.prototype = {
             pixels[id] *= opacity;
             pixels[id] = pixels[id] > bgAlpha ? pixels[id] : bgAlpha; // alpha
         }
-        ctx.putImageData(imageData, x0, y0);
+        return imageData;
+    },
+    drawArea({ ctx = this.ctx, data = this.data, dx = 0, dy = 0, width = this.width, height = this.height } = {}) {
+        const r = this.r;
+        const { minAlpha, valueScale } = this.option;
+        // create new canvas
+        let _ctx = this._getTempCtx();
+        let x0 = dx,
+            y0 = dy,
+            x1 = dx + width,
+            y1 = dy + height;
+        let minX = x0 - r;
+        let minY = y0 - r;
+        let maxX = x1 + r;
+        let maxY = y1 + r;
+        data = filterPoints(data, { minX, minY, maxX, maxY }).hits;
+        for (let [x, y, value] of data) {
+            _ctx.globalAlpha = Math.min(1, Math.max(value * valueScale ||
+                minAlpha, minAlpha));
+            _ctx.drawImage(this.brush, x - r, y - r);
+        }
+        ctx.putImageData(this.color(_ctx.getImageData(x0, y0, width, height)), x0, y0);
     },
     resetSize({ width = this.width, height = this.height } = {}) {
         this.canvas.width = width;
@@ -111,7 +112,7 @@ Heatmap.prototype = {
         this.width = width;
         this.height = height;
         delete this.__ctx;
-        this.draw();
+        this.drawArea();
     },
     _getTempCtx() {
         if (!this.__ctx) {
