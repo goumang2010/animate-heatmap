@@ -56,6 +56,8 @@ function initAnimate(Heatmap) {
             let needDraw = [];
             // remove these points
             let needErease = [];
+            // slinet and visible
+            let silentExisted = [];
             for (let i = 0; i < len; i++) {
                 // item[0] -> X; item[1] -> Y; item[3] -> visible in view; item[4] -> silent point(out of view); item[5] -> if has been deleted;
                 let x0 = this.data[i];
@@ -64,6 +66,9 @@ function initAnimate(Heatmap) {
                 x1[5] = x0[5];
                 // skip slient point
                 if (x1[4]) {
+                    if(!x0[5]) {
+                        silentExisted.push(x1);
+                    }
                     continue;
                 }
                 // point that visible
@@ -90,6 +95,10 @@ function initAnimate(Heatmap) {
                         x1[5] = true;
                     }
                 }
+            }
+            // deleted points might at the silent area
+            if (needErease.length) {
+                needKeep.push(...silentExisted);
             }
             let all = [...needErease, ...needDraw];
             if (all.length > 0) {
