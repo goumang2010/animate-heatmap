@@ -42,7 +42,7 @@
   },
   "main": "./dist/index.js",
   "files": [
-    "dist"
+    "dist", "src"
   ],
   "repository": {
     "type": "git",
