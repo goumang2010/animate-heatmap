@@ -57,8 +57,8 @@ export default {
                 p: 1
             }],
             typeIndex: 0,
-            launcher: null,
-            adapter: null,
+            $launcher: null,
+            $adapter: null,
             config: {
                 platform: 'PC',
                 url: 'https://www.gomeplus.com/'
@@ -66,7 +66,7 @@ export default {
         }
     },
     mounted() {
-        this.adapter = new Adapter([...this.types]);
+        this.$adapter = new Adapter([...this.types]);
     },
     methods: {
         searchClick() {
@@ -103,8 +103,8 @@ export default {
             this.iframe_loaded = true;
             let options = this.config;
             return api.getHeatData(options).then((data) => {
-                this.launcher = this.adapter.getLauncher({initData: data})
-                this.launcher.start();
+                this.$launcher = this.$adapter.getLauncher({initData: data})
+                this.$launcher.start();
             }).catch(err => {
                 throw err;
             });
@@ -113,7 +113,7 @@ export default {
     watch: {
         typeIndex: {
             handler(newValue, oldValue) {
-                this.adapter && this.adapter.resetType(this.typeIndex, this.launcher);
+                this.$adapter && this.$adapter.resetType(this.typeIndex, this.$launcher);
             }
         }
     }
