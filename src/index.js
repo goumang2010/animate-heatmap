@@ -43,7 +43,7 @@ function initAnimate(Heatmap) {
             if (!this.data) {
                 this.variance = 4 * this.r * this.r;
                 // only render visible points
-                this.drawArea({ data: newdata.filter(x => x[3]) });
+                this.drawArea({ data: newdata.filter(x => x[3] && this._checkPosition(x)) });
                 newdata.forEach(x => (x[5] = !x[3]));
                 this.data = newdata;
                 return;
@@ -74,7 +74,7 @@ function initAnimate(Heatmap) {
                     continue;
                 }
                 // point that visible
-                if (x1[3]) {
+                if (x1[3] && this._checkPosition(x1)) {
                     x1[5] = false;
                     if (x0[5]) {
                         // x0 has been deleted, then create it
@@ -108,8 +108,7 @@ function initAnimate(Heatmap) {
                     console.time('update');
                 }
                 this.data = newdata;
-                needDraw.push(...needKeep)
-                needDraw = needDraw.filter(x => this._checkPosition(x));
+                needDraw.push(...needKeep);
                 // group the points
                 let results = groupPoints(all);
                 for (let res of results) {
