@@ -12,12 +12,25 @@ export default function({ option = {}, types, initData } = {}) {
     const heatmapInstance = new Heatmap(option);
     const adapter = new Adapter(types);
     let size = adapter.getIframeSize();
-    adapter.bindEvent({id: 'scroll', type: 'scroll', handler: function() {
-        if (this.body.scrollTop > size.height - this.defaultView.innerHeight) {
+    adapter.bindEvent({
+        id: 'scroll',
+        type: 'scroll',
+        handler: function() {
+            if (this.body.scrollTop > size.height - this.defaultView.innerHeight) {
+                heatmapInstance.resetSize((size = adapter.getIframeSize()));
+                adapter.resetSize(size);
+            }
+        }
+    })
+    adapter.bindEvent({
+        id: 'resize',
+        type: 'resize',
+        target: adapter.$win,
+        handler: function() {
             heatmapInstance.resetSize((size = adapter.getIframeSize()));
             adapter.resetSize(size);
         }
-    }})
+    })
     heatmapInstance.init(size);
     const controller = heatmapInstance.buildAnimation({
         processor: adapter.process.bind(adapter),
@@ -50,12 +63,12 @@ class Adapter {
             height: this.$body.offsetHeight
         }
     }
-    resetSize({width, height}) {
+    resetSize({ width, height }) {
         this.$heatdiv.style.width = width + 'px';
         this.$heatdiv.style.height = height + 'px';
     }
-    bindEvent({ id, type, handler }) {
-        this.$doc.addEventListener(type, handler);
+    bindEvent({ id, type, handler, target = this.$doc }) {
+        target.addEventListener(type, handler);
         this.events = this.events || [];
         id = id || Object.keys(this.events).length;
         this.events.push({ id, type, handler });
@@ -68,7 +81,7 @@ class Adapter {
                 throw new Error('there are no events bound!');
             }
         }
-        let i, event;
+        let i;
         if (typeof id === 'string' || typeof id === 'number') {
             id = id.toString();
             i = this.events.findIndex(x => x.id === id);
@@ -94,9 +107,9 @@ class Adapter {
             } else {
                 throw new Error('string or function is required by unbindEvent!');
             }
-        }
-        event = this.events[i];
-        this.$doc.removeEventListener(event.type, event.handler);
+        } 
+        let { type, handler, target } = this.events[i];
+        target.removeEventListener(type, handler);
         this.events.splice(i, 1);
     }
     updateData(data) {
