@@ -229,9 +229,9 @@ class Adapter {
         const tipData = this.rawData.map(x => `Name：${x.pointName || '--'}<br>${getTipText(x)}`);
         let wait = false,
             _element, _text;
-        const docwidth = this.$body.offsetWidth;
-        const halfwidth = docwidth / 2;
         const setPopover = (x, y) => {
+            let docwidth = this.$body.offsetWidth;
+            let halfwidth = docwidth / 2;
             if (x < halfwidth) {
                 $popover.style.right = '';
                 $popover.style.left = x + 12 + 'px';
