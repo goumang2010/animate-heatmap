@@ -81,15 +81,15 @@ Heatmap.prototype = {
             pixels[id - 2] = gradient[colorOffset * 4 + 1]; // green
             pixels[id - 1] = gradient[colorOffset * 4 + 2]; // blue
             pixels[id] *= opacity;
-            (pixels[id] < bgAlpha) && (pixels[id] = bgAlpha);// alpha
+            (pixels[id] < bgAlpha) && (pixels[id] = bgAlpha); // alpha
         }
         return imageData;
     },
-    setBackgroud({ctx = this.ctx, imageData = ctx.getImageData(0, 0, this.width, this.height), bgAlpha} = {}) {
-        if(bgAlpha == null) {
+    setBackgroud({ ctx = this.ctx, imageData = ctx.getImageData(0, 0, this.width, this.height), bgAlpha } = {}) {
+        if (bgAlpha == null) {
             bgAlpha = this.option.bgAlpha;
         } else {
-            this.option.bgAlpha =bgAlpha;
+            this.option.bgAlpha = bgAlpha;
         }
         let pixels = imageData.data;
         let plen = pixels.length / 4;
