@@ -70,7 +70,7 @@ export default class Adapter {
     }
     resetType(i, launcher) {
         this.setCurrentType(i);
-        launcher.clear();
+        launcher && launcher.clear();
     }
     bindEvent({ id, type, handler, target = this.$doc }) {
         target.addEventListener(type, handler);
