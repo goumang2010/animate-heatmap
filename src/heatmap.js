@@ -81,11 +81,25 @@ Heatmap.prototype = {
             pixels[id - 2] = gradient[colorOffset * 4 + 1]; // green
             pixels[id - 1] = gradient[colorOffset * 4 + 2]; // blue
             pixels[id] *= opacity;
-            pixels[id] = pixels[id] > bgAlpha ? pixels[id] : bgAlpha; // alpha
+            (pixels[id] < bgAlpha) && (pixels[id] = bgAlpha);// alpha
         }
         return imageData;
     },
-    drawArea({ ctx = this.ctx, data = this.data, dx = 0, dy = 0, width = this.width, height = this.height } = {}) {
+    setBackgroud({ctx = this.ctx, imageData = ctx.getImageData(0, 0, this.width, this.height), bgAlpha} = {}) {
+        if(bgAlpha == null) {
+            bgAlpha = this.option.bgAlpha;
+        } else {
+            this.option.bgAlpha =bgAlpha;
+        }
+        let pixels = imageData.data;
+        let plen = pixels.length / 4;
+        while (plen--) {
+            var id = plen * 4 + 3;
+            (pixels[id] === 0) && (pixels[id] = bgAlpha)
+        }
+        ctx.putImageData(imageData, 0, 0);
+    },
+    drawArea({ ctx = this.ctx, data, dx = 0, dy = 0, width = this.width, height = this.height } = {}) {
         const r = this.r;
         const { minAlpha, valueScale } = this.option;
         // create new canvas
@@ -107,12 +121,15 @@ Heatmap.prototype = {
         ctx.putImageData(this.color(_ctx.getImageData(x0, y0, width, height)), x0, y0);
     },
     resetSize({ width = this.width, height = this.height } = {}) {
+        let imageData = this.ctx.getImageData(0, 0, this.width, this.height);
         this.canvas.width = width;
         this.canvas.height = height;
         this.width = width;
         this.height = height;
         delete this.__ctx;
-        this.drawArea();
+        // reset backgroud
+        this.setBackgroud();
+        this.ctx.putImageData(imageData, 0, 0);
     },
     _getTempCtx() {
         if (!this.__ctx) {
