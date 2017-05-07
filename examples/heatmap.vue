@@ -13,6 +13,13 @@
                         <option value='H5'>H5</option>
                     </select>
                 </div>
+                <div class='form-group'>
+                    <label>dataType</label>
+                    <select class="form-control data-type" v-model="typeIndex" :disabled="!show">
+                        <option v-for="(t, i) of types" :value="i"
+                            >{{t.text}}</option>
+                    </select>
+                </div>
                 <div style="width: 300px;">
                     <button id="search" @click='searchClick' type='button' class='btn btn-primary'>Search</button>
                     <span style="width: 200px;">{{message}}</span>
@@ -30,7 +37,7 @@
 </template>
 <script>
 import api from './api';
-import animation from './adapter';
+import Adapter from './adapter';
 export default {
     name: 'heatmap',
     data: function () {
@@ -40,11 +47,26 @@ export default {
             iframe_loaded: false,
             message: '',
             show: true,
+            types: [{
+                name: 'pv',
+                text: 'PV',
+                p: 1
+            }, {
+                name: 'uv',
+                text: 'UV',
+                p: 1
+            }],
+            typeIndex: 0,
+            launcher: null,
+            adapter: null,
             config: {
                 platform: 'PC',
                 url: 'https://www.gomeplus.com/'
             }
         }
+    },
+    mounted() {
+        this.adapter = new Adapter([...this.types]);
     },
     methods: {
         searchClick() {
@@ -81,22 +103,18 @@ export default {
             this.iframe_loaded = true;
             let options = this.config;
             return api.getHeatData(options).then((data) => {
-                let launcher = animation({
-                    initData: data,
-                    types: [{
-                        name: 'pv',
-                        text: 'PV',
-                        p: 1
-                    }, {
-                        name: 'uv',
-                        text: 'UV',
-                        p: 1
-                    }]
-                });
-                launcher.start();
+                this.launcher = this.adapter.getLauncher({initData: data})
+                this.launcher.start();
             }).catch(err => {
                 throw err;
             });
+        }
+    },
+    watch: {
+        typeIndex: {
+            handler(newValue, oldValue) {
+                this.adapter && this.adapter.resetType(this.typeIndex, this.launcher);
+            }
         }
     }
 };

@@ -7,55 +7,56 @@ const defaultOption = {
     opacity: 1,
     bgAlpha: 100,
 };
-export default function({ option = {}, types, initData } = {}) {
-    option = { ...defaultOption, ...option };
-    const heatmapInstance = new Heatmap(option);
-    const adapter = new Adapter(types);
-    let size = adapter.getIframeSize();
-    adapter.bindEvent({
-        id: 'scroll',
-        type: 'scroll',
-        handler: function() {
-            if (this.body.scrollTop > size.height - this.defaultView.innerHeight) {
-                heatmapInstance.resetSize((size = adapter.getIframeSize()));
-                adapter.resetSize(size);
-            }
-        }
-    })
-    adapter.bindEvent({
-        id: 'resize',
-        type: 'resize',
-        target: adapter.$win,
-        handler: function() {
-            heatmapInstance.resetSize((size = adapter.getIframeSize()));
-            adapter.resetSize(size);
-        }
-    })
-    heatmapInstance.init(size);
-    const controller = heatmapInstance.buildAnimation({
-        processor: adapter.process.bind(adapter),
-        converter: adapter.convert.bind(adapter),
-        data: adapter.preProcess(initData)
-    });
-    adapter.append(heatmapInstance.canvas);
-    adapter.showTip();
-    return controller;
-}
-class Adapter {
+export default class Adapter {
     constructor(types) {
-        this.$win = document.querySelector('iframe').contentWindow;
-        this.$doc = this.$win.document;
-        this.$body = this.$doc.body;
         this.setTypes(types);
         this.setCurrentType();
     }
     setTypes(types) {
         this.types = types.map(x => ({ ...x, field: '_' + (x.name || 'noname') }));
     }
-    setCurrentType(type = this.types[0]) {
+    setCurrentType(i = 0) {
+        let type = this.types[i];
         this.type = type;
         this.typeName = type.name;
         this.field = type.field || (type.field = '_' + (type.name || 'noname'));
+    }
+    getLauncher({ option = {}, initData } = {}) {
+        option = { ...defaultOption, ...option };
+        const heatmapInstance = new Heatmap(option);
+        this.$win = document.querySelector('iframe').contentWindow;
+        this.$doc = this.$win.document;
+        this.$body = this.$doc.body;
+        let adapter = this;
+        let size = adapter.getIframeSize();
+        adapter.bindEvent({
+            id: 'scroll',
+            type: 'scroll',
+            handler: function() {
+                if (this.body.scrollTop > size.height - this.defaultView.innerHeight) {
+                    heatmapInstance.resetSize((size = adapter.getIframeSize()));
+                    adapter.resetSize(size);
+                }
+            }
+        })
+        adapter.bindEvent({
+            id: 'resize',
+            type: 'resize',
+            target: adapter.$win,
+            handler: function() {
+                heatmapInstance.resetSize((size = adapter.getIframeSize()));
+                adapter.resetSize(size);
+            }
+        })
+        heatmapInstance.init(size);
+        const launcher = heatmapInstance.buildAnimation({
+            processor: adapter.process.bind(adapter),
+            converter: adapter.convert.bind(adapter),
+            data: adapter.preProcess(initData)
+        });
+        adapter.append(heatmapInstance.canvas);
+        adapter.showTip();
+        return launcher;
     }
     getIframeSize() {
         return {
@@ -66,6 +67,10 @@ class Adapter {
     resetSize({ width, height }) {
         this.$heatdiv.style.width = width + 'px';
         this.$heatdiv.style.height = height + 'px';
+    }
+    resetType(i, launcher) {
+        this.setCurrentType(i);
+        launcher.clear();
     }
     bindEvent({ id, type, handler, target = this.$doc }) {
         target.addEventListener(type, handler);
@@ -107,7 +112,7 @@ class Adapter {
             } else {
                 throw new Error('string or function is required by unbindEvent!');
             }
-        } 
+        }
         let { type, handler, target } = this.events[i];
         target.removeEventListener(type, handler);
         this.events.splice(i, 1);
@@ -115,7 +120,7 @@ class Adapter {
     updateData(data) {
         this.rawData = data;
     }
-    process(data) {
+    process(data = []) {
         const $doc = this.$doc;
         const efp = $doc.elementFromPoint.bind($doc);
         const bodyHeight = $doc.body.offsetHeight;
@@ -200,11 +205,6 @@ class Adapter {
             this.$heatdiv.parentNode.removeChild(this.$heatdiv);
             this.$heatdiv = null;
         }
-    }
-    switch (type = this.typeName) {
-        // clear data
-        this.data = null;
-        this.setCurrentType(this.types.find(x => x.name === type));
     }
     showTip() {
         if (!this.$doc || !this.$heatdiv) {
