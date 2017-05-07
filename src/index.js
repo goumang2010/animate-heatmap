@@ -24,18 +24,23 @@ function initAnimate(Heatmap) {
             setParams(params);
             return {
                 reset: setParams,
+                clear: () => {
+                    this.data = null;
+                },
                 start: (data) => {
                     data && (_data = data);
                     then = Date.now();
                     if (!_requestId) {
                         freshCanvas();
                     }
+                    return this;
                 },
                 stop: () => {
                     if (_requestId) {
                         window.cancelAnimationFrame(_requestId);
                         _requestId = null;
                     }
+                    return this;
                 }
             }
         },
