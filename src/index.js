@@ -45,12 +45,15 @@ function initAnimate(Heatmap) {
                 }
             }
         },
+        render(newdata) {
+            // only render visible points
+            this.drawArea({ data: newdata.filter(x => x[3] && this._checkPosition(x)) });
+            newdata.forEach(x => (x[5] = !x[3]));
+            this.data = newdata;
+        },
         update(newdata) {
             if (!this.data) {
-                // only render visible points
-                this.drawArea({ data: newdata.filter(x => x[3] && this._checkPosition(x)) });
-                newdata.forEach(x => (x[5] = !x[3]));
-                this.data = newdata;
+                this.render(newdata);
                 return;
             }
             let len;
