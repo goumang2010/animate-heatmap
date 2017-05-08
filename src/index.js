@@ -4,6 +4,7 @@ import { groupPoints, getPointsRect } from '../src/utils';
 function initAnimate(Heatmap) {
     Object.assign(Heatmap.prototype, {
         buildAnimation(params) {
+            this.variance = 4 * this.r * this.r;
             let _requestId, _interval, _processor, _converter, _data, then;
             const freshCanvas = () => {
                 _requestId = window.requestAnimationFrame(freshCanvas.bind(this));
@@ -46,7 +47,6 @@ function initAnimate(Heatmap) {
         },
         update(newdata) {
             if (!this.data) {
-                this.variance = 4 * this.r * this.r;
                 // only render visible points
                 this.drawArea({ data: newdata.filter(x => x[3] && this._checkPosition(x)) });
                 newdata.forEach(x => (x[5] = !x[3]));
@@ -115,11 +115,12 @@ function initAnimate(Heatmap) {
                 this.data = newdata;
                 needDraw.push(...needKeep);
                 // group the points
-                let results = groupPoints(all);
+                let results = groupPoints(all, this.variance);
                 for (let res of results) {
                     this.drawArea({ data: needDraw, ...getPointsRect(res, this.r) });
                 }
                 if (process.env.NODE_ENV !== 'production') {
+                    console.log('blocks:' + results.length)
                     console.timeEnd('update');
                 }
             }
