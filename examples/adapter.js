@@ -64,6 +64,12 @@ export default class Adapter {
             height: this.$body.offsetHeight
         }
     }
+    show() {
+        this.$heatdiv && (this.$heatdiv.style.display = 'block');
+    }
+    hide() {
+        this.$heatdiv && (this.$heatdiv.style.display = 'none');
+    }
     resetSize({ width, height }) {
         this.$heatdiv.style.width = width + 'px';
         this.$heatdiv.style.height = height + 'px';

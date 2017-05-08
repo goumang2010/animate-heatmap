@@ -4,7 +4,7 @@
             <form class='form-inline'>
                 <div class='form-group'>
                     <label>URL</label>
-                    <input type='text' class='form-control' placeholder='' id="page-url" data-content="please enter url" v-model="config.url" @keydown.enter.stop.prevent="searchClick">
+                    <input type='text' class='form-control page-url' placeholder='please enter url' v-model="config.url" @keydown.enter.stop.prevent="searchClick">
                 </div>
                 <div class='form-group'>
                     <label>Platform</label>
@@ -16,9 +16,14 @@
                 <div class='form-group'>
                     <label>dataType</label>
                     <select class="form-control data-type" v-model="typeIndex" :disabled="!show">
-                        <option v-for="(t, i) of types" :value="i"
-                            >{{t.text}}</option>
+                        <option v-for="(t, i) of types" :value="i">{{t.text}}</option>
                     </select>
+                </div>
+                <div class='form-group'>
+                    <label class="showmap" slot="extend-nav">
+                        show
+                        <input type="checkbox" v-model="show"></input>
+                    </label>
                 </div>
                 <div style="width: 300px;">
                     <button id="search" @click='searchClick' type='button' class='btn btn-primary'>Search</button>
@@ -70,6 +75,7 @@ export default {
     },
     methods: {
         searchClick() {
+            this.show = true;
             var url = this.config.url;
             if (!/https?:\/\/([\w-]+\.)+[\w-]+(\/[\w- ./?%&=]*)?/.test(url)) {
                 alert('Wrong url!');
@@ -103,7 +109,7 @@ export default {
             this.iframe_loaded = true;
             let options = this.config;
             return api.getHeatData(options).then((data) => {
-                this.$launcher = this.$adapter.getLauncher({initData: data})
+                this.$launcher = this.$adapter.getLauncher({ initData: data })
                 this.$launcher.start();
             }).catch(err => {
                 throw err;
@@ -114,6 +120,15 @@ export default {
         typeIndex: {
             handler(newValue, oldValue) {
                 this.$adapter && this.$adapter.resetType(this.typeIndex, this.$launcher);
+            }
+        },
+        show: {
+            handler(newValue, oldValue) {
+                if (newValue) {
+                    this.$adapter.show();
+                } else {
+                    this.$adapter.hide();
+                }
             }
         }
     }
@@ -144,7 +159,7 @@ export default {
     margin-right: 20px;
 }
 
-.form-inline input {
+.form-inline input.page-url {
     width: 350px;
 }
 
