@@ -7,7 +7,7 @@ function initAnimate(Heatmap) {
             this.variance = 4 * this.r * this.r;
             let _requestId, _interval, _processor, _converter, _data, then;
             const freshCanvas = () => {
-                _requestId = window.requestAnimationFrame(freshCanvas.bind(this));
+                _requestId = window.requestAnimationFrame(freshCanvas);
                 let now = Date.now();
                 let elapsed = now - then;
                 if (elapsed > _interval) {
