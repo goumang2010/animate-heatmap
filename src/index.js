@@ -28,6 +28,11 @@ function initAnimate(Heatmap) {
                 clear: () => {
                     this.data = null;
                 },
+                render: (data) => {
+                    data && (_data = data);
+                    _data = _processor(_data);
+                    this.render(_converter(_data));
+                },
                 start: (data) => {
                     data && (_data = data);
                     then = Date.now();
