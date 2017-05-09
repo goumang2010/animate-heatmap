@@ -21,6 +21,7 @@ function initAnimate(Heatmap) {
                 processor && (_processor = processor) || _processor || (_processor = x => x);
                 converter && (_converter = converter) || _converter || (_converter = x => x);
                 data && (_data = data);
+                this.data = null;
             }
             setParams(params);
             return {
