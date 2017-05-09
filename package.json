@@ -52,7 +52,6 @@
     "lint": "./node_modules/.bin/eslint index.js --fix",
     "build": "webpack --config build/webpack.config.js",
     "test": "karma start ./test/karma/index.js",
-    "test:web": "node ./test/web/app.js",
-    "eg": "node examples/start.js"
+    "test:web": "node ./test/web/app.js"
   }
 }
