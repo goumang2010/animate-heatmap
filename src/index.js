@@ -93,7 +93,7 @@ function initAnimate(Heatmap) {
                     if (x0[5]) {
                         // x0 has been deleted, then create it
                         needDraw.push(x1);
-                    } else if ((x0[0] === x1[0]) && (x0[1] === x1[1])) {
+                    } else if ((x0[0] === x1[0]) && (x0[1] === x1[1]) && (x0[2] === x1[2])) {
                         // position is the same, keep it
                         needKeep.push(x1);
                     } else {
