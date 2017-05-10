@@ -1,5 +1,5 @@
 import Heatmap from './heatmap';
-import { groupPoints, getPointsRect } from '../src/utils';
+import { samePoint, createPointsKeyToIdx, groupPoints, getPointsRect } from '../src/utils';
 
 function initAnimate(Heatmap) {
     Object.assign(Heatmap.prototype, {
@@ -54,17 +54,17 @@ function initAnimate(Heatmap) {
         render(newdata) {
             // only render visible points
             this.drawArea({ data: newdata.filter(x => x[3] && this._checkPosition(x)) });
-            newdata.forEach(x => (x[5] = !x[3]));
+            newdata.forEach(x => (x[6] = !x[3]));
             this.data = newdata;
         },
-        update(newdata) {
-            if (!this.data) {
-                this.render(newdata);
-                return;
+        update(newData, oldData = this.data) {
+            if (!Array.isArray(newData)) {
+                throw new Error('data is required to be an array!');
             }
-            let len;
-            if (!Array.isArray(newdata) || ((len = newdata.length) !== this.data.length)) {
-                throw new Error('data array of same length required!');
+            newData = newData.filter(x => this._checkPosition(x));
+            if (!oldData) {
+                this.render(newData);
+                return;
             }
             // contains points those are visible and might effect redrawing.
             let needKeep = [];
@@ -74,23 +74,23 @@ function initAnimate(Heatmap) {
             let needErease = [];
             // slinet and visible
             let silentExisted = [];
-            for (let i = 0; i < len; i++) {
-                // item[0] -> X; item[1] -> Y; item[3] -> visible in view; item[4] -> silent point(out of view); item[5] -> if has been deleted;
-                let x0 = this.data[i];
-                let x1 = newdata[i];
+            const patchPoint = (x0, x1) => {
+                // item[0] -> X; item[1] -> Y; item[2] -> value;  item[3] -> visible in view; item[4] -> silent point(out of view); item[5] -> key; item[6] -> if has been deleted; 
+                // let x0 = this.data[i];
+                // let x1 = newdata[i];
                 // item[5] -> if deleted, then true, else false. Inherit last state.
-                x1[5] = x0[5];
+                x1[6] = x0[6];
                 // skip slient point
                 if (x1[4]) {
-                    if (!x0[5]) {
+                    if (!x0[6]) {
                         silentExisted.push(x1);
                     }
-                    continue;
+                    return;
                 }
                 // point that visible
                 if (x1[3] && this._checkPosition(x1)) {
-                    x1[5] = false;
-                    if (x0[5]) {
+                    x1[6] = false;
+                    if (x0[6]) {
                         // x0 has been deleted, then create it
                         needDraw.push(x1);
                     } else if ((x0[0] === x1[0]) && (x0[1] === x1[1]) && (x0[2] === x1[2])) {
@@ -103,13 +103,68 @@ function initAnimate(Heatmap) {
                     }
                 } else {
                     // point is not visible now, we need remove it or keep it.
-                    if (x0[5]) {
+                    if (x0[6]) {
                         // already deleted, just leave it alone
                     } else {
                         // ever exist, now inbisible
                         needErease.push(x0);
-                        x1[5] = true;
+                        x1[6] = true;
                     }
+                }
+            }
+            /**
+             * Virtual DOM patching algorithm based on Snabbdom by
+             * Simon Friis Vindum (@paldepind)
+             * Licensed under the MIT License
+             * https://github.com/paldepind/snabbdom/blob/master/LICENSE
+             *
+             * modified by Evan You (@yyx990803)
+             */
+            let oldStartIdx = 0
+            let newStartIdx = 0
+            let oldEndIdx = oldData.length - 1
+            let oldStartPoint = oldData[0]
+            let oldEndPoint = oldData[oldEndIdx]
+            let newEndIdx = newData.length - 1
+            let newStartPoint = newData[0]
+            let newEndPoint = newData[newEndIdx]
+            let oldKeyToIdx, idxInOld;
+            while (oldStartIdx <= oldEndIdx && newStartIdx <= newEndIdx) {
+                if (samePoint(oldStartPoint, newStartPoint)) {
+                    patchPoint(oldStartPoint, newStartPoint)
+                    oldStartPoint = oldData[++oldStartIdx]
+                    newStartPoint = newData[++newStartIdx]
+                } else if (samePoint(oldEndPoint, newEndPoint)) {
+                    patchPoint(oldEndPoint, newEndPoint)
+                    oldEndPoint = oldData[--oldEndIdx]
+                    newEndPoint = newData[--newEndIdx]
+                } else if (samePoint(oldStartPoint, newEndPoint)) { // Point moved right
+                    patchPoint(oldStartPoint, newEndPoint)
+                    oldStartPoint = oldData[++oldStartIdx]
+                    newEndPoint = newData[--newEndIdx]
+                } else if (samePoint(oldEndPoint, newStartPoint)) { // Point moved left
+                    patchPoint(oldEndPoint, newStartPoint)
+                    oldEndPoint = oldData[--oldEndIdx]
+                    newStartPoint = newData[++newStartIdx]
+                } else {
+                    if (oldKeyToIdx == null) oldKeyToIdx = createPointsKeyToIdx(oldData, oldStartIdx, oldEndIdx)
+                    idxInOld = oldKeyToIdx[newStartPoint[5]];
+                    if (idxInOld == null) { // New element
+                        !newStartPoint[4] && needDraw.push(newStartPoint);
+                        newStartPoint = newData[++newStartIdx]
+                    } else {
+                        patchPoint(oldData[idxInOld], newStartPoint)
+                        newStartPoint = newData[++newStartIdx]
+                    }
+                }
+            }
+            if (oldStartIdx > oldEndIdx) {
+                for (; newStartIdx <= newEndIdx; ++newStartIdx) {
+                    needDraw.push(newData[newStartIdx]);
+                }
+            } else if (newStartIdx > newEndIdx) {
+                for (; oldStartIdx <= oldEndIdx; ++oldStartIdx) {
+                    needErease.push(oldData[oldStartIdx]);
                 }
             }
             // deleted points might at the silent area
@@ -119,9 +174,10 @@ function initAnimate(Heatmap) {
             let all = [...needErease, ...needDraw];
             if (all.length > 0) {
                 if (process.env.NODE_ENV !== 'production') {
+                    console.log('points:' + all.length)
                     console.time('update');
                 }
-                this.data = newdata;
+                this.data = newData;
                 needDraw.push(...needKeep);
                 // group the points
                 let results = groupPoints(all, this.variance);

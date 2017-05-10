@@ -104,3 +104,21 @@ export function getPointsRect(data, border = 0) {
     }
     return {};
 }
+export function samePoint(p0, p1) {
+    let samekey = false;
+    if((p0[5] != null) && (p0[5] === p1[5])) {
+        samekey = true; 
+    }
+    return samekey || (p0[0] === p1[0]) && (p0[1] === p1[1]) && (p0[2] === p1[2]);
+}
+export function createPointsKeyToIdx(data, beginIdx, endIdx) {
+    let i, key
+    const map = {}
+    for (i = beginIdx; i <= endIdx; ++i) {
+        let p = data[i];
+        if(p[5] != null) {
+            map[p.key] = i;
+        }
+    }
+    return map
+}
