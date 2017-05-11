@@ -1,3 +1,8 @@
+export const STATE = {
+    SAME_KEY: 1,
+    SAME_POS: 2
+}
+
 export function groupPoints(arr, variance) {
     let groups = [];
     while (arr.length) {
@@ -109,16 +114,28 @@ export function samePoint(p0, p1) {
     if((p0[5] != null) && (p0[5] === p1[5])) {
         samekey = true; 
     }
-    return samekey || (p0[0] === p1[0]) && (p0[1] === p1[1]) && (p0[2] === p1[2]);
+    if(samekey) {
+        // key is same
+        return STATE.SAME_KEY;
+    } else if((p0[0] === p1[0]) && (p0[1] === p1[1])){
+        // same position
+        return STATE.SAME_POS;
+    }
 }
 export function createPointsKeyToIdx(data, beginIdx, endIdx) {
-    let i, key
+    let i
     const map = {}
     for (i = beginIdx; i <= endIdx; ++i) {
         let p = data[i];
-        if(p[5] != null) {
-            map[p.key] = i;
+        if(p[5] == null) {
+            map[getPosSymbol(p)] = i;
+        } else {
+            map[p[5]] = i;
         }
     }
     return map
+}
+
+export function getPosSymbol(p) {
+    return Symbol.for('__' + p[0] + '-' + p[1]);
 }

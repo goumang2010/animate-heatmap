@@ -1,5 +1,5 @@
 import Heatmap from './heatmap';
-import { samePoint, createPointsKeyToIdx, groupPoints, getPointsRect } from '../src/utils';
+import { STATE, samePoint, getPosSymbol, createPointsKeyToIdx, createPointsPosToIdx, groupPoints, getPointsRect } from '../src/utils';
 
 function initAnimate(Heatmap) {
     Object.assign(Heatmap.prototype, {
@@ -74,10 +74,12 @@ function initAnimate(Heatmap) {
             let needErease = [];
             // slinet and visible
             let silentExisted = [];
-            const patchPoint = (x0, x1) => {
+            const patchPoint = (x0, x1, state) => {
+                let samePosition;
+                if(state === STATE.SAME_POS) {
+                    samePosition = true;
+                }
                 // item[0] -> X; item[1] -> Y; item[2] -> value;  item[3] -> visible in view; item[4] -> silent point(out of view); item[5] -> key; item[6] -> if has been deleted; 
-                // let x0 = this.data[i];
-                // let x1 = newdata[i];
                 // item[5] -> if deleted, then true, else false. Inherit last state.
                 x1[6] = x0[6];
                 // skip slient point
@@ -93,7 +95,7 @@ function initAnimate(Heatmap) {
                     if (x0[6]) {
                         // x0 has been deleted, then create it
                         needDraw.push(x1);
-                    } else if ((x0[0] === x1[0]) && (x0[1] === x1[1]) && (x0[2] === x1[2])) {
+                    } else if ((samePosition || x0[0] === x1[0] && x0[1] === x1[1]) && (x0[2] === x1[2])) {
                         // position is the same, keep it
                         needKeep.push(x1);
                     } else {
@@ -128,34 +130,36 @@ function initAnimate(Heatmap) {
             let newEndIdx = newData.length - 1
             let newStartPoint = newData[0]
             let newEndPoint = newData[newEndIdx]
-            let oldKeyToIdx, idxInOld;
+            let oldKeyToIdx, keyIdxInOld;
+            let state;
             while (oldStartIdx <= oldEndIdx && newStartIdx <= newEndIdx) {
-                if (samePoint(oldStartPoint, newStartPoint)) {
-                    patchPoint(oldStartPoint, newStartPoint)
+                if (state = samePoint(oldStartPoint, newStartPoint)) {
+                    patchPoint(oldStartPoint, newStartPoint, state)
                     oldStartPoint = oldData[++oldStartIdx]
                     newStartPoint = newData[++newStartIdx]
-                } else if (samePoint(oldEndPoint, newEndPoint)) {
-                    patchPoint(oldEndPoint, newEndPoint)
+                } else if (state = samePoint(oldEndPoint, newEndPoint)) {
+                    patchPoint(oldEndPoint, newEndPoint, state)
                     oldEndPoint = oldData[--oldEndIdx]
                     newEndPoint = newData[--newEndIdx]
-                } else if (samePoint(oldStartPoint, newEndPoint)) { // Point moved right
-                    patchPoint(oldStartPoint, newEndPoint)
+                } else if (state = samePoint(oldStartPoint, newEndPoint)) { // Point moved right
+                    patchPoint(oldStartPoint, newEndPoint, state)
                     oldStartPoint = oldData[++oldStartIdx]
                     newEndPoint = newData[--newEndIdx]
-                } else if (samePoint(oldEndPoint, newStartPoint)) { // Point moved left
-                    patchPoint(oldEndPoint, newStartPoint)
+                } else if (state = samePoint(oldEndPoint, newStartPoint)) { // Point moved left
+                    patchPoint(oldEndPoint, newStartPoint, state)
                     oldEndPoint = oldData[--oldEndIdx]
                     newStartPoint = newData[++newStartIdx]
                 } else {
                     if (oldKeyToIdx == null) oldKeyToIdx = createPointsKeyToIdx(oldData, oldStartIdx, oldEndIdx)
-                    idxInOld = oldKeyToIdx[newStartPoint[5]];
-                    if (idxInOld == null) { // New element
+                    keyIdxInOld = oldKeyToIdx[newStartPoint[5] || getPosSymbol(newStartPoint)];
+                    if (keyIdxInOld == null) { // New element
                         !newStartPoint[4] && needDraw.push(newStartPoint);
                         newStartPoint = newData[++newStartIdx]
                     } else {
-                        patchPoint(oldData[idxInOld], newStartPoint)
+                        patchPoint(oldData[keyIdxInOld], newStartPoint)
                         newStartPoint = newData[++newStartIdx]
                     }
+
                 }
             }
             if (oldStartIdx > oldEndIdx) {
