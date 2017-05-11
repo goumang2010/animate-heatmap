@@ -75,10 +75,6 @@ function initAnimate(Heatmap) {
             // slinet and visible
             let silentExisted = [];
             const patchPoint = (x0, x1, state) => {
-                let samePosition;
-                if(state === STATE.SAME_POS) {
-                    samePosition = true;
-                }
                 // item[0] -> X; item[1] -> Y; item[2] -> value;  item[3] -> visible in view; item[4] -> silent point(out of view); item[5] -> key; item[6] -> if has been deleted; 
                 // item[5] -> if deleted, then true, else false. Inherit last state.
                 x1[6] = x0[6];
@@ -95,7 +91,7 @@ function initAnimate(Heatmap) {
                     if (x0[6]) {
                         // x0 has been deleted, then create it
                         needDraw.push(x1);
-                    } else if ((samePosition || x0[0] === x1[0] && x0[1] === x1[1]) && (x0[2] === x1[2])) {
+                    } else if ((state === STATE.SAME_POS || x0[0] === x1[0] && x0[1] === x1[1]) && (x0[2] === x1[2])) {
                         // position is the same, keep it
                         needKeep.push(x1);
                     } else {
