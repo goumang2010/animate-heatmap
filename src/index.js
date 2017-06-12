@@ -5,20 +5,18 @@ function initAnimate(Heatmap) {
     Object.assign(Heatmap.prototype, {
         buildAnimation(params) {
             this.variance = 4 * this.r * this.r;
-            let _requestId, _interval, _processor, _converter, _data, then;
+            let _requestId, _interval, _converter, _data, then;
             const freshCanvas = () => {
                 _requestId = window.requestAnimationFrame(freshCanvas);
                 let now = Date.now();
                 let elapsed = now - then;
                 if (elapsed > _interval) {
-                    _data = _processor(_data);
                     this.update(_converter(_data));
                     then = now;
                 }
             }
-            const setParams = ({ fps, processor, converter, data }) => {
+            const setParams = ({ fps, converter, data }) => {
                 fps && (_interval = 1000 / fps) || _interval || (_interval = 50);
-                processor && (_processor = processor) || _processor || (_processor = x => x);
                 converter && (_converter = converter) || _converter || (_converter = x => x);
                 data && (_data = data);
                 // this.data = null;
@@ -31,7 +29,6 @@ function initAnimate(Heatmap) {
                 },
                 render: (data) => {
                     data && (_data = data);
-                    _data = _processor(_data);
                     this.render(_converter(_data));
                 },
                 start: (data) => {
